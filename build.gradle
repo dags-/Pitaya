@@ -1,0 +1,42 @@
+plugins {
+    id "com.github.johnrengelman.shadow" version "4.0.2"
+    id "maven"
+    id "java"
+}
+
+group "me.dags"
+version "0.0.1"
+
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+    maven { url "https://repo.spongepowered.org/maven" }
+}
+
+dependencies {
+    compileOnly "org.spongepowered:spongeapi:7.1.0"
+    shade "com.github.dags-:CommandBus:2.0.6"
+    shade "com.github.dags-:Config:1.0.6"
+    shade "com.github.dags-:TextMU:-SNAPSHOT"
+}
+
+shadowJar {
+    configurations = [project.configurations.shade]
+    relocate "me.dags.commandbus.", "me.dags.pitaya.command."
+    relocate "me.dags.config.", "me.dags.pitaya.config."
+    relocate "me.dags.text.", "me.dags.pitaya.text."
+    exclude "mcmod.info"
+    classifier null
+}
+
+install.repositories.mavenInstaller.pom.whenConfigured { pom ->
+    pom.dependencies.removeAll { it.scope == "compile" }
+}
+
+jar.dependsOn shadowJar
+jar.enabled false

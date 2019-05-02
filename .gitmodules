@@ -1,0 +1,3 @@
+[submodule "CommandBus"]
+	path = CommandBus
+	url = https://github.com/dags-/CommandBus.git
