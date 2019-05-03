@@ -8,6 +8,11 @@ import java.util.Optional;
 
 public class PluginUtils {
 
+    /**
+     * Determine the currently active plugin and return it's PluginContainer instance
+     *
+     * @return the active plugin's PluginContainer
+     */
     public static PluginContainer getCurrentPlugin() {
         Optional<PluginContainer> plugin = Sponge.getCauseStackManager().getCurrentCause().last(PluginContainer.class);
         if (!plugin.isPresent()) {
@@ -16,6 +21,11 @@ public class PluginUtils {
         return plugin.orElseThrow(() -> new IllegalStateException("Unable to determine active PluginContainer"));
     }
 
+    /**
+     * Determine the currently active plugin and return it's instance
+     *
+     * @return the active plugin's instance
+     */
     public static Object getCurrentPluginInstance() {
         return getCurrentPlugin().getInstance().orElseThrow(() -> new IllegalStateException("Unable to get plugin instance"));
     }
