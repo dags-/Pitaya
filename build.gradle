@@ -22,7 +22,7 @@ dependencies {
     compileOnly "org.spongepowered:spongeapi:7.1.0"
     shade "com.github.dags-:CommandBus:2.0.6"
     shade "com.github.dags-:Config:1.0.6"
-    shade "com.github.dags-:TextMU:-SNAPSHOT"
+    shade "com.github.dags-:TextMU:0.4.0"
 }
 
 shadowJar {
@@ -31,7 +31,6 @@ shadowJar {
     relocate "me.dags.config.", "me.dags.pitaya.config."
     relocate "me.dags.text.", "me.dags.pitaya.text."
     exclude "mcmod.info"
-    classifier null
 }
 
 install.repositories.mavenInstaller.pom.whenConfigured { pom ->
