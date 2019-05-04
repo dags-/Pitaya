@@ -20,6 +20,9 @@ public class TextUtils {
      * @return the merged Text
      */
     public static Text merge(Text text) {
+        if (text.isEmpty()) {
+            return text;
+        }
         return merge(text, false);
     }
 
@@ -31,6 +34,9 @@ public class TextUtils {
      * @return the minimized Text
      */
     public static Text minimize(Text text) {
+        if (text.isEmpty()) {
+            return text;
+        }
         return minimize(text, null).build();
     }
 
@@ -44,6 +50,9 @@ public class TextUtils {
      * @return The optimized Text
      */
     public static Text optimize(Text text) {
+        if (text.isEmpty()) {
+            return text;
+        }
         return merge(text, true);
     }
 
@@ -156,6 +165,7 @@ public class TextUtils {
                 compressed = merged;
             }
         }
+        list.add(compressed);
         if (minimize) {
             return minimize(join(list));
         }
