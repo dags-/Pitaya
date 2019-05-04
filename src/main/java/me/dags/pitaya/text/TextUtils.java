@@ -48,6 +48,10 @@ public class TextUtils {
     }
 
     private static void collectParts(Text text, Text parent, List<Text> parts, boolean minimize) {
+        if (text.isEmpty()) {
+            return;
+        }
+
         Text.Builder single = text.toBuilder().removeAll();
         inherit(single, parent);
 
@@ -139,15 +143,19 @@ public class TextUtils {
         List<Text> list = new LinkedList<>();
         Text compressed = Text.EMPTY;
         for (Text part : parts) {
+            if (compressed.isEmpty()) {
+                compressed = part;
+                continue;
+            }
+
             Text merged = merge(compressed, part);
-            if (merged == Text.EMPTY) {
+            if (merged.isEmpty()) {
                 list.add(compressed);
                 compressed = part;
             } else {
                 compressed = merged;
             }
         }
-        list.add(compressed);
         if (minimize) {
             return minimize(join(list));
         }
