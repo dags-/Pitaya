@@ -22,7 +22,7 @@ dependencies {
     compile "org.spongepowered:spongeapi:7.1.0"
     shade "com.github.dags-:CommandBus:2.0.6"
     shade "com.github.dags-:Config:1.0.6"
-    shade "com.github.dags-:TextMU:0.4.1"
+    shade "com.github.dags-:TextMU:0.4.2"
 }
 
 shadowJar {
