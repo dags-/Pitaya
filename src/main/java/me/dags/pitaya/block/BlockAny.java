@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 
-public class BlockAny implements BlockType {
+class BlockAny implements BlockType {
 
     static final BlockAny TYPE = new BlockAny();
 

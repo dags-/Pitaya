@@ -1,6 +1,8 @@
 package me.dags.pitaya.block;
 
+import com.google.common.collect.ImmutableMap;
 import me.dags.pitaya.util.OptionalValue;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
@@ -8,29 +10,38 @@ import org.spongepowered.api.block.trait.BlockTrait;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-public class StateMatcher implements OptionalValue {
+public class StateMatcher implements OptionalValue, Predicate<BlockState> {
 
-    static StateMatcher EMPTY = new StateMatcher(BlockTypes.AIR, Collections.emptyMap());
+    private static final StateMatcher ANY = new StateMatcher(BlockAny.TYPE, Collections.emptyMap(), "*");
+    private static final StateMatcher EMPTY = new StateMatcher(BlockTypes.AIR, Collections.emptyMap(), "empty");
 
-    static final Object ANY_VALUE = new Object() {
+    private static final Object ANY_VALUE = new Object() {
         @Override
         public String toString() {
             return "*";
         }
     };
 
+    private final String string;
     private final BlockType type;
     private final Map<String, Object> properties;
 
-    private StateMatcher(BlockType type, Map<String, Object> map) {
+    private StateMatcher(BlockType type, Map<String, Object> properties, String string) {
         this.type = type;
-        this.properties = map;
+        this.string = string;
+        this.properties = properties;
     }
 
-    @Override
-    public boolean isPresent() {
-        return this != EMPTY;
+    public BlockType getType() {
+        return type;
+    }
+
+    public Map<String, Object> getProperties() {
+        return properties;
     }
 
     public boolean matches(BlockState state) {
@@ -38,14 +49,14 @@ public class StateMatcher implements OptionalValue {
             return false;
         }
 
-        if (state.getType() != type && type != BlockAny.TYPE) {
+        if (state.getType() != getType() && getType() != BlockAny.TYPE) {
             return false;
         }
 
         Map<BlockTrait<?>, ?> traits = state.getTraitMap();
 
         outer:
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+        for (Map.Entry<String, Object> entry : getProperties().entrySet()) {
             for (Map.Entry<BlockTrait<?>, ?> trait : traits.entrySet()) {
                 if (trait.getKey().getName().equals(entry.getKey())) {
                     if (entry.getKey() == StateMatcher.ANY_VALUE) {
@@ -63,22 +74,90 @@ public class StateMatcher implements OptionalValue {
         return true;
     }
 
-    @Override
-    public String toString() {
-        return String.format("%s=%s", type, properties);
+    public BlockState find(BlockType fallback) {
+        return find(fallback.getDefaultState());
     }
 
-    public static StateMatcher parse(String input) {
-        StateProperties properties = StateProperties.parse(input);
+    public BlockState find(BlockState fallback) {
+        return stream().findFirst().orElse(fallback);
+    }
 
-        if (properties.getType() == BlockAny.TYPE && properties.getProperties().isEmpty()) {
+    public Optional<BlockState> find() {
+        return stream().findFirst();
+    }
+
+    public Stream<BlockState> stream() {
+        return Sponge.getRegistry().getAllOf(BlockState.class).stream().filter(this);
+    }
+
+    @Override
+    public boolean isPresent() {
+        return this != EMPTY;
+    }
+
+    @Override
+    public boolean test(BlockState state) {
+        return matches(state);
+    }
+
+    @Override
+    public String toString() {
+        return string;
+    }
+
+    public static StateMatcher parse(String in) {
+        int propertiesStart = in.indexOf('[');
+        int typeEnd = propertiesStart < 0 ? in.length() : propertiesStart;
+
+        String block = in.substring(0, typeEnd);
+        Optional<BlockType> typeOptional;
+
+        if (block.equals("*")) {
+            typeOptional = Optional.of(BlockAny.TYPE);
+        } else {
+            typeOptional = Sponge.getRegistry().getType(BlockType.class, block);
+        }
+
+        if (!typeOptional.isPresent()) {
             return StateMatcher.EMPTY;
         }
 
-        if (properties.isPresent()) {
-            return new StateMatcher(properties.getType(), properties.getProperties());
+        BlockType type = typeOptional.get();
+        if (propertiesStart < 0) {
+            if (type == BlockAny.TYPE) {
+                return StateMatcher.ANY;
+            }
+            return new StateMatcher(type, Collections.emptyMap(), in);
         }
 
-        return StateMatcher.EMPTY;
+        ImmutableMap.Builder<String, Object> properties = ImmutableMap.builder();
+
+        for (int i = propertiesStart + 1; i < in.length(); i++) {
+            int keyStart = i;
+            int keyEnd = in.indexOf('=', keyStart);
+
+            if (keyEnd < 0) {
+                break;
+            }
+
+            int valStart = keyEnd + 1;
+            int valEnd = in.indexOf(',', valStart);
+            if (valEnd < 0) {
+                valEnd = in.indexOf(']');
+                if (valEnd < 0) {
+                    break;
+                }
+            }
+
+            String key = in.substring(keyStart, keyEnd);
+            String val = in.substring(valStart, valEnd);
+            Object value = val.equals("*") ? StateMatcher.ANY_VALUE : val;
+
+            properties.put(key, value);
+
+            i = valEnd;
+        }
+
+        return new StateMatcher(type, properties.build(), in);
     }
 }
