@@ -1,6 +1,6 @@
 # Pitaya
 
-###= Build-script boiler plate:
+### Build-script boiler plate:
 ```groovy
 plugins {
     id "com.github.johnrengelman.shadow" version "4.0.2"
