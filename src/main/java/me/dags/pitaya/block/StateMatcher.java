@@ -7,11 +7,13 @@ import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.trait.BlockTrait;
+import org.spongepowered.api.event.filter.data.Has;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StateMatcher implements OptionalValue, Predicate<BlockState> {
@@ -59,7 +61,7 @@ public class StateMatcher implements OptionalValue, Predicate<BlockState> {
         for (Map.Entry<String, Object> entry : getProperties().entrySet()) {
             for (Map.Entry<BlockTrait<?>, ?> trait : traits.entrySet()) {
                 if (trait.getKey().getName().equals(entry.getKey())) {
-                    if (entry.getKey() == StateMatcher.ANY_VALUE) {
+                    if (entry.getValue() == StateMatcher.ANY_VALUE) {
                         continue outer;
                     }
 
@@ -90,6 +92,26 @@ public class StateMatcher implements OptionalValue, Predicate<BlockState> {
         return Sponge.getRegistry().getAllOf(BlockState.class).stream().filter(this);
     }
 
+    public List<BlockState> toList() {
+        return stream().collect(Collectors.toList());
+    }
+
+    public Set<BlockState> toSet() {
+        return stream().collect(Collectors.toSet());
+    }
+
+    public Map<String, BlockState> toMap() {
+        return stream().collect(Collectors.toMap(BlockState::getId, Function.identity()));
+    }
+
+    public Map<BlockType, List<BlockState>> toGroups() {
+        return stream().collect(Collectors.groupingBy(BlockState::getType));
+    }
+
+    public void forEach(Consumer<BlockState> consumer) {
+        stream().forEach(consumer);
+    }
+
     @Override
     public boolean isPresent() {
         return this != EMPTY;
@@ -105,7 +127,18 @@ public class StateMatcher implements OptionalValue, Predicate<BlockState> {
         return string;
     }
 
+    public static StateMatcher parse(Object in) {
+        if (in == null) {
+            return StateMatcher.EMPTY;
+        }
+        return parse(in.toString());
+    }
+
     public static StateMatcher parse(String in) {
+        if (in == null) {
+            return StateMatcher.EMPTY;
+        }
+
         int propertiesStart = in.indexOf('[');
         int typeEnd = propertiesStart < 0 ? in.length() : propertiesStart;
 

@@ -10,13 +10,11 @@ plugins {
 
 group "me.dags"
 version "0.0.1"
-
-def pluginId = rootProject.name.toLowerCase()
 def spongeAPI = "7.2.0"
 def spongeChannel = "SNAPSHOT"
 
 sponge {
-    plugin.id = pluginId
+    plugin.id = rootProject.name.toLowerCase()
     plugin.meta {
         name = rootProject.name
         version = rootProject.version
@@ -36,13 +34,13 @@ repositories {
 
 dependencies {
     compile "org.spongepowered:spongeapi:${spongeAPI}-${spongeChannel}"
-    shade "com.github.dags-:Pitaya:0.0.4"
+    shade "com.github.dags-:Pitaya:0.0.5"
 }
 
 shadowJar {
     minimize()
     configurations = [project.configurations.shade]
-    relocate "me.dags.pitaya.", "me.dags.${pluginId}.pitaya."
+    relocate "me.dags.pitaya.", "me.dags.${sponge.plguin.id}.libs.pitaya."
     archivesBaseName  = "${project.name}-${project.version}-SpongeAPI-${spongeAPI}.jar"
 }
 
