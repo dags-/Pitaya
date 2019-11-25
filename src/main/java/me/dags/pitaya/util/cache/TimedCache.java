@@ -1,9 +1,11 @@
 package me.dags.pitaya.util.cache;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -17,15 +19,17 @@ public class TimedCache<K, V> {
     private final long timeout;
     private final TimeUnit unit;
     private final Map<K, Value> values;
+    private final BiConsumer<K, V> listener;
 
     private long nextUpdate  = 0L;
 
     public TimedCache(long timeout, TimeUnit unit) {
-        this(timeout, unit, HashMap::new);
+        this(timeout, unit, (k, v) -> {});
     }
 
-    public TimedCache(long timeout, TimeUnit unit, Supplier<Map<K, Value>> supplier) {
-        this.values = supplier.get();
+    public TimedCache(long timeout, TimeUnit unit, BiConsumer<K, V> listener) {
+        this.values = new HashMap<>();
+        this.listener = listener;
         this.timeout = timeout;
         this.unit = unit;
     }
@@ -65,10 +69,35 @@ public class TimedCache<K, V> {
         values.remove(key);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof TimedCache && ((TimedCache) o).values.equals(values);
+    }
+
+    @Override
+    public int hashCode() {
+        return values.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Cache{"
+                + "timeout=" + timeout
+                + ",values=" + values.toString()
+                + "}";
+    }
+
     private void update() {
         long now = System.currentTimeMillis();
         if (nextUpdate < now) {
-            values.entrySet().removeIf(entry -> hasExpired(entry.getValue(), now));
+            Iterator<Map.Entry<K, Value>> iterator = values.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<K, Value> entry = iterator.next();
+                if (hasExpired(entry.getValue(), now)) {
+                    iterator.remove();
+                    listener.accept(entry.getKey(), entry.getValue().value);
+                }
+            }
             nextUpdate = now + interval;
         }
     }
@@ -77,7 +106,7 @@ public class TimedCache<K, V> {
         return value.timestamp < now;
     }
 
-    public class Value {
+    private class Value {
 
         private final V value;
         private long timestamp = 0L;

@@ -39,9 +39,10 @@ dependencies {
 
 shadowJar {
     minimize()
+    classifier = null
     configurations = [project.configurations.shade]
-    relocate "me.dags.pitaya.", "me.dags.${sponge.plguin.id}.libs.pitaya."
-    archivesBaseName  = "${project.name}-${project.version}-SpongeAPI-${spongeAPI}.jar"
+    relocate "me.dags.pitaya.", "${project.group}.${sponge.plugin.id}.libs.pitaya."
+    archivesBaseName  = "${sponge.plugin.meta.name}-${spongeAPI}"
 }
 
 build {

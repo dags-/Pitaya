@@ -7,7 +7,6 @@ import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.trait.BlockTrait;
-import org.spongepowered.api.event.filter.data.Has;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -89,7 +88,10 @@ public class StateMatcher implements OptionalValue, Predicate<BlockState> {
     }
 
     public Stream<BlockState> stream() {
-        return Sponge.getRegistry().getAllOf(BlockState.class).stream().filter(this);
+        if (getType() == BlockAny.TYPE) {
+            return Sponge.getRegistry().getAllOf(BlockState.class).stream().filter(this);
+        }
+        return getType().getAllBlockStates().stream().filter(this);
     }
 
     public List<BlockState> toList() {

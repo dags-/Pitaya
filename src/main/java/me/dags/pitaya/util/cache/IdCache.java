@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -22,8 +23,8 @@ public class IdCache<T> extends TimedCache<UUID, T> {
         Sponge.getEventManager().registerListeners(PluginUtils.getCurrentPluginInstance(), this);
     }
 
-    public IdCache(long timeout, TimeUnit unit, Supplier<Map<UUID, Value>> supplier) {
-        super(timeout, unit, supplier);
+    public IdCache(long timeout, TimeUnit unit, BiConsumer<UUID, T> listener) {
+        super(timeout, unit, listener);
         Sponge.getEventManager().registerListeners(PluginUtils.getCurrentPluginInstance(), this);
     }
 
