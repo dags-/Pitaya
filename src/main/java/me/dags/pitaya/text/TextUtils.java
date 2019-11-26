@@ -1,6 +1,9 @@
 package me.dags.pitaya.text;
 
-import org.spongepowered.api.text.*;
+import org.spongepowered.api.text.LiteralText;
+import org.spongepowered.api.text.ScoreText;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.TranslatableText;
 import org.spongepowered.api.text.action.HoverAction;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.translation.Translation;
