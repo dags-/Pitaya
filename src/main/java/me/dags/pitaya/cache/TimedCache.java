@@ -1,4 +1,4 @@
-package me.dags.pitaya.util.cache;
+package me.dags.pitaya.cache;
 
 import java.util.HashMap;
 import java.util.Iterator;

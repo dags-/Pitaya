@@ -1,4 +1,4 @@
-package me.dags.pitaya.util.cache;
+package me.dags.pitaya.cache;
 
 import me.dags.pitaya.util.PluginUtils;
 import org.spongepowered.api.Sponge;

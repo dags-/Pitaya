@@ -23,72 +23,102 @@ public class PosIterator {
         this.height = height;
     }
 
-    /**
-     * Check if the iterator has a new position to move to
-     */
-    public boolean hasNext() {
-        return dx + 1 < width || dz + 1 < length || dy + 1 < height;
-    }
-
-    /**
-     * Iterate to the next position and return as a 2D (X, Z) point
-     */
-    public Vector2i next2i() {
-        next();
-        return new Vector2i(origin.getX() + dz, origin.getZ() + dz);
-    }
-
-    /**
-     * Iterate to the next position and return as 3D (X, Y, Z) point
-     */
-    public Vector3i next3i() {
-        next();
-        return origin.add(dx, dy, dz);
-    }
-
-    /**
-     * Iterate to the next position, returning as Location object using the provide World
-     */
-    public <E extends Extent> Location<E> next(E extent) {
-        return new Location<>(extent, next3i());
-    }
-
-    private void next() {
+    public boolean next() {
         if (dx + 1 < width) {
             dx++;
-            return;
+            return true;
         }
         if (dz + 1 < length) {
             dx = 0;
             dz++;
-            return;
+            return true;
         }
         if (dy + 1 < height) {
             dx = 0;
             dz = 0;
             dy++;
+            return true;
         }
+        return false;
+    }
+
+    public int getX() {
+        return origin.getX() + dx;
+    }
+
+    public int getY() {
+        return origin.getY() + dy;
+    }
+
+    public int getZ() {
+        return origin.getZ() + dz;
+    }
+
+    public Vector3i get3i() {
+        return new Vector3i(getX(), getY(), getZ());
+    }
+
+    public Vector2i get2i() {
+        return new Vector2i(getX(), getZ());
+    }
+
+    public <T extends Extent> Location<T> get(T extent) {
+        return new Location<>(extent, get3i());
+    }
+
+    /**
+     * Create a PosIterator that iterates over the area between (x1,z1) & (x2,z2) in the X & Z axes (in that order)
+     */
+    public static PosIterator create(int x1, int z1, int x2, int z2) {
+        int minX = Math.min(x1, x2);
+        int minZ = Math.min(z1, z2);
+        int maxX = Math.max(x1, x2);
+        int maxZ = Math.max(z1, z2);
+        int width = maxX - minX;
+        int length = maxZ - minZ;
+        return new PosIterator(new Vector3i(minX, 0, minZ), width, 0, length);
     }
 
     /**
      * Create a PosIterator that iterates over the area between pos1 & pos2 in the X & Z axes (in that order)
      */
     public static PosIterator create(Vector2i pos1, Vector2i pos2) {
-        Vector2i min = pos1.min(pos2);
-        Vector2i max = pos1.max(pos2);
-        Vector2i size = max.sub(min);
-        Vector3i origin = new Vector3i(min.getX(), 0, min.getY());
-        return new PosIterator(origin, size.getX(), 0, size.getY());
+        return create(pos1.getX(), pos1.getY(), pos2.getX(), pos2.getY());
+    }
+
+    /**
+     * Create a PosIterator that iterates over the volume between (x1,y1,z1) & (x2,y2,z2) in the X, Z,
+     * & Y axes (in that order)
+     */
+    public static PosIterator create(int x1, int y1, int z1, int x2, int y2, int z2) {
+        int minX = Math.min(x1, x2);
+        int minY = Math.min(y1, y2);
+        int minZ = Math.min(z1, z2);
+        int maxX = Math.max(x1, x2);
+        int maxY = Math.min(y1, y2);
+        int maxZ = Math.max(z1, z2);
+        int width = maxX - minX;
+        int height = maxY - minY;
+        int length = maxZ - minZ;
+        return new PosIterator(new Vector3i(minX, minY, minZ), width, height, length);
     }
 
     /**
      * Create a PosIterator that iterates over the volume between pos1 & pos2 in the X, Z, & Y axes (in that order)
      */
     public static PosIterator create(Vector3i pos1, Vector3i pos2) {
-        Vector3i min = pos1.min(pos2);
-        Vector3i max = pos1.max(pos2);
-        Vector3i size = max.sub(min);
-        return new PosIterator(min, size.getX(), size.getY(), size.getZ());
+        return create(pos1.getX(), pos1.getY(), pos1.getZ(), pos2.getX(), pos2.getY(), pos2.getZ());
+    }
+
+    /**
+     * Create a PosIterator that iterates over an area around point (x, z) with the given radius,
+     * in the X & Z axes (in that order)
+     */
+    public static PosIterator radius(int x, int z, int radius) {
+        int width = radius + radius + 1;
+        int length = radius + radius + 1;
+        Vector3i origin = new Vector3i(x - radius, 0, z - radius);
+        return new PosIterator(origin, width, 0, length);
     }
 
     /**
@@ -96,10 +126,19 @@ public class PosIterator {
      * in the X & Z axes (in that order)
      */
     public static PosIterator radius(Vector2i center, int radius) {
+        return radius(center.getX(), center.getY(), radius);
+    }
+
+    /**
+     * Create a PosIterator that iterates over a volume around the point (x, y, z) with the given radius,
+     * in the X, Z & Y axes (in that order)
+     */
+    public static PosIterator radius(int x, int y, int z, int radius) {
         int width = radius + radius + 1;
+        int height = radius + radius + 1;
         int length = radius + radius + 1;
-        Vector3i origin = new Vector3i(center.getX() - radius, 0, center.getY() - radius);
-        return new PosIterator(origin, width, 0, length);
+        Vector3i origin = new Vector3i(x - radius, y - radius, z - radius);
+        return new PosIterator(origin, width, height, length);
     }
 
     /**
@@ -107,10 +146,6 @@ public class PosIterator {
      * in the X, Z & Y axes (in that order)
      */
     public static PosIterator radius(Vector3i center, int radius) {
-        int width = radius + radius + 1;
-        int length = radius + radius + 1;
-        int height = radius + radius + 1;
-        Vector3i origin = center.sub(radius, radius, radius);
-        return new PosIterator(origin, width, height, length);
+        return radius(center.getX(), center.getY(), center.getZ(), radius);
     }
 }

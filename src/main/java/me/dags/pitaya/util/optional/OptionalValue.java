@@ -1,4 +1,4 @@
-package me.dags.pitaya.util;
+package me.dags.pitaya.util.optional;
 
 public interface OptionalValue {
 

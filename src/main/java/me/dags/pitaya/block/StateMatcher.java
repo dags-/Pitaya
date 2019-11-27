@@ -1,7 +1,7 @@
 package me.dags.pitaya.block;
 
 import com.google.common.collect.ImmutableMap;
-import me.dags.pitaya.util.OptionalValue;
+import me.dags.pitaya.util.optional.OptionalValue;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;

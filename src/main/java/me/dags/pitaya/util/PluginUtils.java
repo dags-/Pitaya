@@ -29,4 +29,17 @@ public class PluginUtils {
     public static Object getCurrentPluginInstance() {
         return getCurrentPlugin().getInstance().orElseThrow(() -> new IllegalStateException("Unable to get plugin instance"));
     }
+
+    /**
+     * Determine the currently active plugin and return it's instance
+     *
+     * @return the active plugin's instance
+     */
+    public static <T> T getCurrentPluginInstance(Class<T> type) {
+        Object instance = getCurrentPluginInstance();
+        if (!type.isInstance(instance)) {
+            throw new IllegalStateException("Unable to get plugin instance");
+        }
+        return type.cast(instance);
+    }
 }

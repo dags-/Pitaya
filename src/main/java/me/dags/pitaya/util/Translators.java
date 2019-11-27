@@ -1,0 +1,81 @@
+package me.dags.pitaya.util;
+
+import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableList;
+import me.dags.config.Node;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataQuery;
+import org.spongepowered.api.data.DataView;
+import org.spongepowered.api.data.persistence.DataTranslator;
+import org.spongepowered.api.data.persistence.InvalidDataException;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+
+public class Translators {
+
+    public static Vector3i vec3i(Node node) {
+        int x = node.get("x", 0);
+        int y = node.get("y", 0);
+        int z = node.get("z", 0);
+        return new Vector3i(x, y, z);
+    }
+
+    public static void vec3i(Node node, Vector3i vec) {
+        node.set("x", vec.getX());
+        node.set("y", vec.getY());
+        node.set("z", vec.getZ());
+    }
+
+    public static String getString(DataView view, DataQuery path) throws InvalidDataException {
+        return get(path, view::getString);
+    }
+
+    public static boolean getBool(DataView view, DataQuery path) throws InvalidDataException {
+        return get(path, view::getBoolean);
+    }
+
+    public static int getInt(DataView view, DataQuery path) throws InvalidDataException {
+        return get(path, view::getInt);
+    }
+
+    public static long getLong(DataView view, DataQuery path) throws InvalidDataException {
+        return get(path, view::getLong);
+    }
+
+    public static <T> T get(DataQuery query, Function<DataQuery, Optional<T>> getter) {
+        return getter.apply(query).orElseThrow(() -> err(query));
+    }
+
+    public static <T extends Enum<T>> T getEnum(DataView view, DataQuery path, Class<T> type) throws InvalidDataException {
+        return Enum.valueOf(type, getString(view, path));
+    }
+
+    public static <T> T get(DataView view, DataQuery path, DataTranslator<T> translator) throws InvalidDataException {
+        DataView child = view.getView(path).orElseThrow(() -> err(path));
+        return translator.translate(child);
+    }
+
+    public static <T> List<T> getList(DataView view, DataQuery path, DataTranslator<T> translator) throws InvalidDataException {
+        List<DataView> data = view.getViewList(path).orElseThrow(() -> err(path));
+        List<T> list = new LinkedList<>();
+        for (DataView dataView : data) {
+            list.add(translator.translate(dataView));
+        }
+        return ImmutableList.copyOf(list);
+    }
+
+    public static <T> List<DataContainer> toList(List<T> list, DataTranslator<T> translator) {
+        List<DataContainer> data = new LinkedList<>();
+        for (T t : list) {
+            data.add(translator.translate(t));
+        }
+        return data;
+    }
+
+    public static InvalidDataException err(DataQuery query) {
+        return new InvalidDataException("Missing data: " + query);
+    }
+}

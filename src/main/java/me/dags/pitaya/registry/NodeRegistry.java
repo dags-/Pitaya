@@ -1,0 +1,53 @@
+package me.dags.pitaya.registry;
+
+import me.dags.config.Config;
+import me.dags.config.Node;
+import org.spongepowered.api.CatalogType;
+
+import java.util.Optional;
+
+public abstract class NodeRegistry<T extends CatalogType> extends Registry<T> {
+
+    private final Node root;
+    private final Config storage;
+    private final boolean registerDefaults;
+
+    public NodeRegistry(Config storage) {
+        this(storage, storage);
+    }
+
+    public NodeRegistry(Config storage, Node root) {
+        this(storage, root, false);
+    }
+
+    public NodeRegistry(Config storage, Node root, boolean registerDefaults) {
+        this.registerDefaults = registerDefaults;
+        this.storage = storage;
+        this.root = root;
+    }
+
+    @Override
+    public void registerDefaults() {
+        if (registerDefaults) {
+            load();
+        }
+    }
+
+    @Override
+    public void load() {
+        registry.clear();
+        root.iterate((name, data) -> deserialize(name.toString(), data).ifPresent(value -> registry.put(value.getId(), value)));
+    }
+
+    @Override
+    public void register(T value) {
+        super.register(value);
+        Node data = root.node(value.getId());
+        serialize(data, value);
+        storage.save();
+    }
+
+    protected abstract void serialize(Node node, T value);
+
+    protected abstract Optional<T> deserialize(String name, Node node);
+}
