@@ -24,10 +24,10 @@ public class RegionMap<T extends Positioned> {
     }
 
     public void add(T t, int radius) {
-        int minX = radius - t.getPosition().getX() >> size;
-        int minZ = radius - t.getPosition().getZ() >> size;
-        int maxX = radius + t.getPosition().getX() >> size;
-        int maxZ = radius + t.getPosition().getZ() >> size;
+        int minX = (t.getPosition().getX() - radius) >> size;
+        int minZ = (t.getPosition().getZ() - radius) >> size;
+        int maxX = (t.getPosition().getX() + radius) >> size;
+        int maxZ = (t.getPosition().getZ() + radius) >> size;
         for (int rz = minZ; rz <= maxZ; rz++) {
             for (int rx = minX; rx <= maxX; rx++) {
                 long id = getId(rx, rz);
@@ -47,10 +47,11 @@ public class RegionMap<T extends Positioned> {
     public void visit(int x, int z, int radius, Consumer<T> consumer) {
         int regionX = x >> size;
         int regionZ = z >> size;
-        int minX = regionX - radius;
-        int minZ = regionZ - radius;
-        int maxX = regionX + radius;
-        int maxZ = regionZ + radius;
+        int regionRadius = radius >> size;
+        int minX = regionX - regionRadius;
+        int minZ = regionZ - regionRadius;
+        int maxX = regionX + regionRadius;
+        int maxZ = regionZ + regionRadius;
         Set<T> visited = new HashSet<>();
         for (int rz = minZ; rz <= maxZ; rz++) {
             for (int rx = minX; rx <= maxX; rx++) {
