@@ -2,6 +2,8 @@ package me.dags.pitaya.util.optional;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class Result<T, E> {
@@ -20,6 +22,30 @@ public class Result<T, E> {
 
     public boolean isFail() {
         return value == null && error != null;
+    }
+
+    public <V> Result<V, E> map(Function<T, V> mapper) {
+        if (isFail()) {
+            return Result.fail(error);
+        }
+        return Result.pass(mapper.apply(value));
+    }
+
+    public <V> Result<V, E> flatMap(Function<T, Result<V, E>> mapper) {
+        if (isFail()) {
+            return Result.fail(error);
+        }
+        return mapper.apply(value);
+    }
+
+    public Result<T, E> filter(Predicate<T> predicate, E error) {
+        if (isFail()) {
+            return this;
+        }
+        if (predicate.test(value)) {
+            return this;
+        }
+        return Result.fail(error);
     }
 
     public Result<T, E> onPass(Consumer<T> consumer) {
