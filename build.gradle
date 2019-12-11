@@ -5,7 +5,7 @@ plugins {
 }
 
 group "me.dags"
-version "0.0.12"
+version "0.0.13"
 
 configurations {
     shade
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    compile "org.spongepowered:spongeapi:7.1.0"
+    compile "org.spongepowered:spongeapi:7.2.0-SNAPSHOT"
     shade "com.github.dags-:CommandBus:2.0.6"
     shade "com.github.dags-:Config:1.0.8"
     shade "com.github.dags-:TextMU:0.4.3"
