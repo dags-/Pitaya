@@ -42,6 +42,24 @@ public class PosIterator {
         return false;
     }
 
+    public int index() {
+        int index = getDeltaY() * width * length;
+        index += getDeltaZ() * width;
+        return index + getDeltaX();
+    }
+
+    public int getDeltaX() {
+        return dx;
+    }
+
+    public int getDeltaY() {
+        return dy;
+    }
+
+    public int getDeltaZ() {
+        return dz;
+    }
+
     public int getX() {
         return origin.getX() + dx;
     }
