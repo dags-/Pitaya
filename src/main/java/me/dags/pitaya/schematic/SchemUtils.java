@@ -33,27 +33,27 @@ public class SchemUtils {
     public static final DataQuery TILE_Z = DataQuery.of("TileZ");
     public static final List<Double> NO_POS = ImmutableList.of(0D, 0D, 0D);
 
-    public static Schematic wrap(Schematic schematic) {
-        if (schematic instanceof SchematicWrapper) {
-            return schematic;
+    public static PitSchematic wrap(Schematic schematic) {
+        if (schematic instanceof PitSchematic) {
+            return (PitSchematic) schematic;
         }
         return new SchematicWrapper(schematic);
     }
 
-    public static Schematic translate(DataView view) {
+    public static PitSchematic translate(DataView view) {
         Schematic schematic = DataTranslators.SCHEMATIC.translate(view);
         return new SchematicWrapper(schematic);
     }
 
     public static DataView translate(Schematic schematic) {
         if (schematic instanceof SchematicWrapper) {
-            SchematicWrapper wrapper = (SchematicWrapper) schematic;
-            return translate(wrapper.getSchematic());
+            PitSchematic wrapper = (PitSchematic) schematic;
+            return translate(wrapper.getBacking());
         }
         return DataTranslators.SCHEMATIC.translate(schematic);
     }
 
-    public static Schematic createGlobal(Location<? extends Extent> origin, Vector3i pos1, Vector3i pos2) {
+    public static PitSchematic createGlobal(Location<? extends Extent> origin, Vector3i pos1, Vector3i pos2) {
         ArchetypeVolume volume = createVolume(origin, pos1, pos2);
 
         Schematic schematic = Schematic.builder()
@@ -65,7 +65,7 @@ public class SchemUtils {
         return wrap(schematic);
     }
 
-    public static Schematic createLocal(Location<? extends Extent> origin, Vector3i pos1, Vector3i pos2) {
+    public static PitSchematic createLocal(Location<? extends Extent> origin, Vector3i pos1, Vector3i pos2) {
         ArchetypeVolume volume = createVolume(origin, pos1, pos2);
 
         Schematic schematic = Schematic.builder()

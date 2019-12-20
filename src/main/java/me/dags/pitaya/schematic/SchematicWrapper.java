@@ -3,6 +3,8 @@ package me.dags.pitaya.schematic;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ListMultimap;
+import me.dags.pitaya.schematic.history.History;
+import me.dags.pitaya.schematic.history.HistoryManager;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
@@ -29,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class SchematicWrapper implements Schematic {
+public class SchematicWrapper implements PitSchematic {
 
     private final Schematic schematic;
 
@@ -37,27 +39,34 @@ public class SchematicWrapper implements Schematic {
         this.schematic = schematic;
     }
 
-    public Schematic getSchematic() {
+    @Override
+    public Schematic getBacking() {
         return schematic;
     }
 
     @Override
-    public void apply(Location<World> location, BlockChangeFlag blockChangeFlag) {
-        Extent dest = location.getExtent();
-
-        schematic.getBlockWorker().iterate((volume, x, y, z) -> {
+    public void applyBlocks(Location<World> location, BlockChangeFlag blockChangeFlag) {
+        getBacking().getBlockWorker().iterate((volume, x, y, z) -> {
             BlockState state = volume.getBlock(x, y, z);
             int px = location.getBlockX() + x;
             int py = location.getBlockY() + y;
             int pz = location.getBlockZ() + z;
-            dest.setBlock(px, py, pz, state, blockChangeFlag);
+            location.getExtent().setBlock(px, py, pz, state, blockChangeFlag);
         });
+    }
 
-        schematic.getTileEntityArchetypes().forEach((offset, archetype) -> {
+    @Override
+    public void applyTiles(Location<World> location) {
+        History history = HistoryManager.getHistory();
+        getBacking().getTileEntityArchetypes().forEach((offset, archetype) -> {
             Location<World> target = location.add(offset);
-            archetype.apply(target);
+            archetype.apply(target).ifPresent(history::record);
         });
+    }
 
+    @Override
+    public void applyEntities(Location<World> location) {
+        History history = HistoryManager.getHistory();
         try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
             frame.addContext(EventContextKeys.SPAWN_TYPE, SpawnTypes.PLUGIN);
 
@@ -81,13 +90,13 @@ public class SchematicWrapper implements Schematic {
                     archetype.setRawData(data);
 
                     // Offset by the relative tile position
-                    archetype.apply(location.add(tileX.get(), tileY.get(), tileZ.get()));
+                    archetype.apply(location.add(tileX.get(), tileY.get(), tileZ.get())).ifPresent(history::record);
                 } else {
                     // Apply the archetype at the offset location
                     List<Double> pos = data.getDoubleList(Queries.POSITION).orElse(SchemUtils.NO_POS);
 
                     // Offset by the relative entity position
-                    archetype.apply(location.add(pos.get(0), pos.get(1), pos.get(2)));
+                    archetype.apply(location.add(pos.get(0), pos.get(1), pos.get(2))).ifPresent(history::record);
                 }
 
                 // Restore the relative tile position data if present
@@ -101,14 +110,17 @@ public class SchematicWrapper implements Schematic {
                 archetype.setRawData(data);
             });
         }
+    }
 
-        if (schematic.getBiomes().isPresent()) {
-            schematic.getBiomes().get().getBiomeWorker().iterate((volume, x, y, z) -> {
+    @Override
+    public void applyBiomes(Location<World> location) {
+        if (getBacking().getBiomes().isPresent()) {
+            getBacking().getBiomes().get().getBiomeWorker().iterate((volume, x, y, z) -> {
                 BiomeType biome = volume.getBiome(x, y, z);
                 int px = location.getBlockX() + x;
                 int py = location.getBlockY() + y;
                 int pz = location.getBlockZ() + z;
-                dest.setBiome(px, py, pz, biome);
+                location.getExtent().setBiome(px, py, pz, biome);
             });
         }
     }
